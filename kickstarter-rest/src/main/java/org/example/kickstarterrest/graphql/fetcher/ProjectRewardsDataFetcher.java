@@ -1,49 +1,42 @@
 package org.example.kickstarterrest.graphql.fetcher;
 
 import com.netflix.graphql.dgs.DgsComponent;
-import com.netflix.graphql.dgs.DgsMutation;
-import com.netflix.graphql.dgs.DgsQuery;
+import com.netflix.graphql.dgs.DgsData;
+import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
 import com.netflix.graphql.dgs.InputArgument;
-import lombok.RequiredArgsConstructor;
 import org.example.kickstarterapicontract.dto.PagedResponse;
-import org.example.kickstarterapicontract.dto.RewardRequest;
+import org.example.kickstarterapicontract.dto.ProjectResponse;
 import org.example.kickstarterapicontract.dto.RewardResponse;
-import org.example.kickstarterrest.graphql.types.CreateRewardInputGql;
 import org.example.kickstarterrest.graphql.types.PageInfoGql;
 import org.example.kickstarterrest.graphql.types.RewardConnectionGql;
 import org.example.kickstarterrest.service.RewardService;
-import java.util.List;
 
 @DgsComponent
-@RequiredArgsConstructor
-public class RewardDataFetcher {
+public class ProjectRewardsDataFetcher {
+
     private final RewardService rewardService;
 
-    @DgsQuery
-    public RewardResponse reward(@InputArgument String id) {
-        return rewardService.findRewardById(Long.parseLong(id));
+    public ProjectRewardsDataFetcher(RewardService rewardService) {
+        this.rewardService = rewardService;
     }
 
-
-    @DgsQuery
+    @DgsData(parentType = "Project", field = "rewards")
     public RewardConnectionGql rewards(
+            DgsDataFetchingEnvironment dfe,
             @InputArgument Integer page,
             @InputArgument Integer size) {
+
+        ProjectResponse project = dfe.getSource();
 
         int pageNum = page != null ? page : 0;
         int pageSize = size != null ? size : 20;
 
-        PagedResponse<RewardResponse> paged = rewardService.findAllRewards(null, null, null, pageNum, pageSize);
+        PagedResponse<RewardResponse> paged = rewardService.findAllRewards(
+                project.getId(), null, null, pageNum, pageSize);
 
         return new RewardConnectionGql(
                 paged.content(),
                 new PageInfoGql(paged.pageNumber(), paged.pageSize(), paged.totalPages(), paged.last()),
                 (int) paged.totalElements());
-    }
-
-    @DgsMutation
-    public RewardResponse createReward(@InputArgument CreateRewardInputGql input) {
-        RewardRequest request = new RewardRequest(input.title(), input.description(), input.minPrice(), Long.parseLong(input.projectId()));
-        return rewardService.createReward(request);
     }
 }

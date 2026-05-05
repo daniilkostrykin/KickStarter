@@ -8,7 +8,7 @@ type Project {
     pledged: Float!
     status: String!
     deadline: DateTime
-    rewards: [Reward!]!
+    rewards(page: Int = 0, size: Int = 10): RewardConnection!
 }
 
 type Reward {
@@ -19,10 +19,22 @@ type Reward {
     minPrice: Float!
 }
 
+type RewardConnection {
+    content: [Reward!]!
+    totalElements: Int!
+    pageInfo: PageInfo!
+}
+
 type Pledge {
     pledgeId: ID!
     status: String!
     transactionDate: DateTime!
+}
+
+type PledgeConnection {
+    content: [Pledge!]!
+    totalElements: Int!
+    pageInfo: PageInfo!
 }
 
 type PageInfo {
@@ -69,10 +81,10 @@ type Query {
     projects(page: Int = 0, size: Int = 10): ProjectConnection!
 
     reward(id: ID!): Reward
-    rewards: [Reward!]!
+    rewards(page: Int = 0, size: Int = 10): RewardConnection!
 
     pledge(id: ID!): Pledge
-    pledges: [Pledge!]!
+    pledges(page: Int = 0, size: Int = 10): PledgeConnection!
 }
 
 type Mutation {

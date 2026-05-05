@@ -36,7 +36,7 @@ public class PledgeService {
 
     public PledgeResponse create(PledgeRequest request) {
         projectService.findById(request.projectId());
-        RewardResponse reward = rewardService.findById(request.rewardId());
+        RewardResponse reward = rewardService.findRewardById(request.rewardId());
 
         if (request.pledge().compareTo(reward.getMinPrice()) < 0) {
             throw new IllegalArgumentException("Сумма взноса меньше минимальной цены вознаграждения!");
