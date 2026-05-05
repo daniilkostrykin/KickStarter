@@ -6,7 +6,7 @@ import lombok.*;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.Relation;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Builder
@@ -17,11 +17,11 @@ import java.time.LocalDateTime;
 public class PledgeResponse extends RepresentationModel<PledgeResponse> {
 
     @Schema(description = "ID взноса", example = "1")
-    private final Long pledgeId;
+    private Long pledgeId;
 
     @Schema(description = "Статус", example = "ACTIVE")
-    private final String status;
+    private String status;
     
     @Schema(description = "Дата транзакции", example = "2026-03-29T21:40:45.422407")
-    private final LocalDateTime transactionDate;
+    private OffsetDateTime transactionDate;
 }

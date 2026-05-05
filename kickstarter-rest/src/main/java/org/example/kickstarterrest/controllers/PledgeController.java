@@ -1,4 +1,4 @@
-package org.example.kickstarterrest.endpoints;
+package org.example.kickstarterrest.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.example.kickstarterapicontract.endpoints.PledgeApi;

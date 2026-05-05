@@ -138,7 +138,7 @@ import lombok.*;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.Relation;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -151,7 +151,7 @@ public class PledgeResponse extends RepresentationModel<PledgeResponse> {
 
     private Long pledgeId;
     private String status;
-    private LocalDateTime transactionDate;
+    private OffsetDateTime transactionDate;
 
 }
 
@@ -165,7 +165,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record ProjectRequest(
         @Schema(description = "Название проекта", example = "GTA VII", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -185,7 +185,7 @@ public record ProjectRequest(
         @Schema(description = "Дедлайн проекта", example = "")
         @NotNull(message = "Дедлайн проекта не может быть null")
         @Future(message = "Дедлайн проекта должен быть в будущем")
-        LocalDateTime deadline
+        OffsetDateTime deadline
 
 
 ) {
@@ -203,7 +203,7 @@ import org.springframework.hateoas.server.core.Relation;
 
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.*;
 
 
@@ -224,7 +224,7 @@ public class ProjectResponse extends RepresentationModel<ProjectResponse> {
     private BigDecimal pledged;
 
     private String status;         //  DRAFT, ACTIVE, SUCCESSFUL, FAILED
-    private LocalDateTime deadline;
+    private OffsetDateTime deadline;
 }
 
 

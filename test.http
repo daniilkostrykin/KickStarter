@@ -1,5 +1,10 @@
-### GET request to example server
-GET https://examples.http-client.intellij.net/get
-    ?generated-in=IntelliJ IDEA
+GRAPHQL http://localhost:8080/graphql
 
-###
+query {
+    projects {
+        id
+        title
+        goal
+        pledged
+    }
+}

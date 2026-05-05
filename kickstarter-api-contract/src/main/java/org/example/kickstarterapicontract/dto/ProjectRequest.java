@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record ProjectRequest(
         @Schema(description = "Название проекта", example = "GTA VII", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -24,5 +24,5 @@ public record ProjectRequest(
         @Schema(description = "Дедлайн проекта", example = "2026-03-29T21:40:45.422407", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "Дедлайн проекта не может быть пустым")
         @Future(message = "Дедлайн проекта должен быть в будущем")
-        LocalDateTime deadline
+        OffsetDateTime deadline
 ) {}

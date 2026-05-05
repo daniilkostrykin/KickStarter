@@ -7,7 +7,7 @@ import org.example.kickstarterapicontract.dto.RewardResponse;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,7 +28,7 @@ public class InMemoryStorage {
         projects.put(pId, ProjectResponse.builder()
                 .id(pId).title("Умный рюкзак").description("Рюкзак со встроенным powerbank")
                 .goal(new BigDecimal("500000")).pledged(new BigDecimal("0"))
-                .status("ACTIVE").deadline(LocalDateTime.now().plusDays(30)).build());
+                .status("ACTIVE").deadline(OffsetDateTime.now().plusDays(30)).build());
 
         long rId = rewardSequence.incrementAndGet();
         rewards.put(rId, RewardResponse.builder()

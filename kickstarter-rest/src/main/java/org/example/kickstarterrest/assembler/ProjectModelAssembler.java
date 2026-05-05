@@ -2,7 +2,7 @@ package org.example.kickstarterrest.assembler;
 
 import org.example.kickstarterapicontract.dto.PatchProjectRequest;
 import org.example.kickstarterapicontract.dto.ProjectResponse;
-import org.example.kickstarterrest.endpoints.ProjectController;
+import org.example.kickstarterrest.controllers.ProjectController;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;

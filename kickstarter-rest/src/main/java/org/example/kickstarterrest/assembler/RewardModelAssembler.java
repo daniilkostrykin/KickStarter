@@ -1,8 +1,7 @@
 package org.example.kickstarterrest.assembler;
 
-
 import org.example.kickstarterapicontract.dto.RewardResponse;
-import org.example.kickstarterrest.endpoints.RewardController;
+import org.example.kickstarterrest.controllers.RewardController;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;

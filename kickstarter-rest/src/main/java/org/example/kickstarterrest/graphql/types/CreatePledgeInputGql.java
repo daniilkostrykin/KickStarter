@@ -1,4 +1,6 @@
 package org.example.kickstarterrest.graphql.types;
 
-public record CreatePledgeInputGql() {
-}
+public record CreatePledgeInputGql(
+        String projectId,
+        String rewardId,
+        java.math.BigDecimal pledge) {}

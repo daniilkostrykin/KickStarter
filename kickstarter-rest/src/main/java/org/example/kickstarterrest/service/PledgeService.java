@@ -8,7 +8,7 @@ import org.example.kickstarterrest.storage.InMemoryStorage;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -42,12 +42,11 @@ public class PledgeService {
             throw new IllegalArgumentException("Сумма взноса меньше минимальной цены вознаграждения!");
         }
 
-        // Динамически пересчитываем сумму в проекте (твоя фишка!)
         projectService.addPledgedAmount(request.projectId(), request.pledge());
 
         long id = storage.pledgeSequence.incrementAndGet();
         PledgeResponse pledge = PledgeResponse.builder()
-                .pledgeId(id).status("SUCCESSFUL").transactionDate(LocalDateTime.now()).build();
+                .pledgeId(id).status("SUCCESSFUL").transactionDate(OffsetDateTime.now()).build();
         storage.pledges.put(id, pledge);
         return pledge;
     }

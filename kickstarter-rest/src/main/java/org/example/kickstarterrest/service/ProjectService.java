@@ -1,6 +1,7 @@
 package org.example.kickstarterrest.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.kickstarterapicontract.dto.PagedResponse;
 import org.example.kickstarterapicontract.dto.PatchProjectRequest;
 import org.example.kickstarterapicontract.dto.ProjectRequest;
 import org.example.kickstarterapicontract.dto.ProjectResponse;
@@ -22,9 +23,17 @@ public class ProjectService {
         return storage.projects.get(id);
     }
 
-    public List<ProjectResponse> findAll() {
-        return storage.projects.values().stream()
-                .sorted(Comparator.comparingLong(ProjectResponse::getId)).toList();
+    public PagedResponse<ProjectResponse> findAll(int page, int size) {
+        List<ProjectResponse> all = storage.projects.values().stream()
+                .sorted(Comparator.comparingLong(ProjectResponse::getId))
+                .toList();
+        int totalElements = all.size();
+        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 1;
+        int from = page * size;
+        int to = Math.min(from + size, totalElements);
+        List<ProjectResponse> content = (from >= totalElements) ? List.of() : all.subList(from, to);
+        return new PagedResponse<>(content, page, size, totalElements, totalPages, page >= totalPages - 1);
+
     }
 
     public ProjectResponse create(ProjectRequest request) {

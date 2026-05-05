@@ -17,18 +17,18 @@ import lombok.*;
 public class RewardResponse extends RepresentationModel<RewardResponse> {
 
     @Schema(description = "Уникальный идентификатор награды", example = "1")
-    private final Long id;
+    private Long id;
     
     @Schema(description = "Название награды", example = "Стандартная награда")
-    private final String title;
+    private String title;
     
     @Schema(description = "Описание награды", example = "Копия продукта")
-    private final String description;
+    private String description;
     
     @Schema(description = "Минимальная цена для получения награды", example = "50.00")
-    private final BigDecimal minPrice;
+    private BigDecimal minPrice;
     
     @Schema(description = "ID проекта, к которому относится награда", example = "1")
-    private final Long projectId;
+    private Long projectId;
 
 }
