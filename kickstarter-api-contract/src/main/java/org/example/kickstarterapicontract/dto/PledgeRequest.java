@@ -18,6 +18,10 @@ public record PledgeRequest(
         @Schema(description = "Размер вознаграждения", example = "1000", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "Размер вознаграждения не может быть пустым")
         @Positive(message = "Вознаграждение должно быть больше 0")
-        BigDecimal pledge
+        BigDecimal pledge,
+
+        @Schema(description = "ID спонсора", example = "1000", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotNull(message = "ID пользователя не может быть пустым")
+        Long userId
 ) {
 }

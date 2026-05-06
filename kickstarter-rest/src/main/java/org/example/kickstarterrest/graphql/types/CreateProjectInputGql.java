@@ -6,4 +6,5 @@ public record CreateProjectInputGql(
         String title,
         String description,
         java.math.BigDecimal goal,
-        java.time.OffsetDateTime deadline) {}
+        java.time.OffsetDateTime deadline,
+        String authorId) {}

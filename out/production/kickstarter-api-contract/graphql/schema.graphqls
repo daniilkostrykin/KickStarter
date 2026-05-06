@@ -9,6 +9,7 @@ type Project {
     status: String!
     deadline: DateTime
     rewards(page: Int = 0, size: Int = 10): RewardConnection!
+    author: User
 }
 
 type Reward {
@@ -27,8 +28,18 @@ type RewardConnection {
 
 type Pledge {
     pledgeId: ID!
+    projectId: ID!
+    rewardId: ID!
+    amount: Float!
     status: String!
     transactionDate: DateTime!
+    sponsor: User
+}
+
+type PledgeConnection {
+    content: [Pledge!]!
+    totalElements: Int!
+    pageInfo: PageInfo!
 }
 
 type PageInfo {
@@ -44,11 +55,24 @@ type ProjectConnection {
     pageInfo: PageInfo!
 }
 
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    backedProjects: [Project]
+}
+
 input CreateProjectInput {
     title: String!
     description: String
     goal: Float!
     deadline: DateTime
+    authorId: ID!
+}
+
+input CreateUserInput {
+    username: String!
+    email: String!
 }
 
 input PatchProjectInput {
@@ -68,6 +92,7 @@ input CreatePledgeInput {
     projectId: ID!
     rewardId: ID!
     pledge: Float!
+    userId: ID!
 }
 
 type Query {
@@ -78,7 +103,9 @@ type Query {
     rewards(page: Int = 0, size: Int = 10): RewardConnection!
 
     pledge(id: ID!): Pledge
-    pledges: [Pledge!]!
+    pledges(page: Int = 0, size: Int = 10): PledgeConnection!
+
+    user(id: ID!): User
 }
 
 type Mutation {
@@ -88,4 +115,6 @@ type Mutation {
     createReward(input: CreateRewardInput!): Reward!
 
     makePledge(input: CreatePledgeInput!): Pledge!
+
+    registerUser(input: CreateUserInput!): User!
 }

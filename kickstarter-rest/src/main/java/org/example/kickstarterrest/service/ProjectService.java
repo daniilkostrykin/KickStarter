@@ -17,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProjectService {
     private final InMemoryStorage storage;
+    private final UserService userService;
 
     public ProjectResponse findById(Long id) {
         if (!storage.projects.containsKey(id)) throw new ResourceNotFoundException("Проект", id);
@@ -37,11 +38,17 @@ public class ProjectService {
     }
 
     public ProjectResponse create(ProjectRequest request) {
+        userService.findById(request.authorId());
         long id = storage.projectSequence.incrementAndGet();
         ProjectResponse project = ProjectResponse.builder()
-                .id(id).title(request.title()).description(request.description())
+                .id(id)
+                .title(request.title())
+                .description(request.description())
                 .goal(request.goal()).pledged(new BigDecimal("0"))
-                .status("DRAFT").deadline(request.deadline()).build();
+                .status("DRAFT")
+                .deadline(request.deadline())
+                .authorId(request.authorId())
+                .build();
         storage.projects.put(id, project);
         return project;
     }
@@ -54,7 +61,9 @@ public class ProjectService {
                 .description(request.description() != null ? request.description() : existing.getDescription())
                 .goal(existing.getGoal()).pledged(existing.getPledged())
                 .status(request.status() != null ? request.status() : existing.getStatus())
-                .deadline(existing.getDeadline()).build();
+                .deadline(existing.getDeadline())
+                .authorId(existing.getAuthorId())
+                .build();
         storage.projects.put(id, updated);
         return updated;
     }
@@ -64,7 +73,9 @@ public class ProjectService {
         ProjectResponse updated = ProjectResponse.builder()
                 .id(existing.getId()).title(existing.getTitle()).description(existing.getDescription())
                 .goal(existing.getGoal()).status(existing.getStatus()).deadline(existing.getDeadline())
-                .pledged(existing.getPledged().add(amount)).build();
+                .pledged(existing.getPledged().add(amount))
+                .authorId(existing.getAuthorId())
+                .build();
         storage.projects.put(id, updated);
     }
 }

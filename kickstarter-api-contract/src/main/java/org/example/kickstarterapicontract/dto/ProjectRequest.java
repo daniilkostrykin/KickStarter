@@ -24,5 +24,9 @@ public record ProjectRequest(
         @Schema(description = "Дедлайн проекта", example = "2026-03-29T21:40:45.422407", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "Дедлайн проекта не может быть пустым")
         @Future(message = "Дедлайн проекта должен быть в будущем")
-        OffsetDateTime deadline
+        OffsetDateTime deadline,
+
+        @Schema(description = "ID автора", example = "1")
+        @NotNull(message = "ID автора не может быть пустым")
+        Long authorId
 ) {}

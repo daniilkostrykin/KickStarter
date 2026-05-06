@@ -39,4 +39,7 @@ public class ProjectResponse extends RepresentationModel<ProjectResponse> {
     
     @Schema(description = "Дедлайн проекта", example = "2026-12-31T23:59:59")
     private OffsetDateTime deadline;
+
+    @Schema(description = "ID автора", example = "1")
+    private Long authorId;
 }
