@@ -67,4 +67,14 @@ public interface ProjectApi {
             @PathVariable Long id,
             @Valid @RequestBody PatchProjectRequest request
     );
+
+    @Operation(summary = "Удалить проект", description = "Удаляет проект по его ID",
+            security = @SecurityRequirement(name = KickStarterApiContractConfig.SECURITY_SCHEME_BEARER))
+    @ApiResponse(responseCode = "204", description = "Проект успешно удалён")
+    @ApiResponse(responseCode = "404", description = "Проект не найден",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @DeleteMapping(value = "/{id}")
+    ResponseEntity<Void> deleteProject(
+            @PathVariable Long id
+    );
 }

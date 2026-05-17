@@ -1,7 +1,9 @@
 package org.example.kickstarterrest.service;
 
+import lombok.RequiredArgsConstructor;
 import org.example.kickstarterapicontract.dto.*;
 import org.example.kickstarterapicontract.exception.ResourceNotFoundException;
+import org.example.kickstarterrest.event.RewardEventPublisher;
 import org.example.kickstarterrest.storage.InMemoryStorage;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -11,15 +13,13 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class RewardService {
 
     private final InMemoryStorage storage;
     private final ProjectService projectService;
+    private final RewardEventPublisher eventPublisher;
 
-    public RewardService(InMemoryStorage storage, @Lazy ProjectService projectService) {
-        this.storage = storage;
-        this.projectService = projectService;
-    }
 
     public RewardResponse findRewardById(Long id) {
         return Optional.ofNullable(storage.rewards.get(id))
@@ -64,6 +64,7 @@ public class RewardService {
                 .build();
         storage.rewards.put(id, reward);
 
+        eventPublisher.publishCreated(reward);
         return reward;
     }
 

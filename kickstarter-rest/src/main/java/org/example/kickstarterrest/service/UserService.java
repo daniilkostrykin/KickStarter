@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.kickstarterapicontract.dto.PagedResponse;
 import org.example.kickstarterapicontract.dto.UserRequest;
 import org.example.kickstarterapicontract.dto.UserResponse;
+import org.example.kickstarterrest.event.UserEventPublisher;
 import org.example.kickstarterrest.exception.ResourceNotFoundException;
 import org.example.kickstarterrest.storage.InMemoryStorage;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final InMemoryStorage storage;
+    private final UserEventPublisher eventPublisher;
 
     public PagedResponse<UserResponse> findAll(String usernameSearch, String emailSearch, int page, int size) {
         java.util.stream.Stream<UserResponse> stream = storage.users.values().stream()
@@ -50,6 +52,7 @@ public class UserService {
                 .build();
 
         storage.users.put(id, user);
+        eventPublisher.publishCreated(user);
         return user;
     }
 

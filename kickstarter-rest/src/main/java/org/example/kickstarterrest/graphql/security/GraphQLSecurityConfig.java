@@ -44,5 +44,11 @@ public class GraphQLSecurityConfig {
     public Instrumentation maxQueryComplexityInstrumentation() {
         return new MaxQueryComplexityInstrumentation(200);
     }
+
+    // Трассировка запросов, отключено для продакшена
+    // @Bean
+    // public Instrumentation tracingInstrumentation() {
+    //     return new TracingInstrumentation();
+    // }
 }
 

@@ -2,6 +2,7 @@ package org.example.kickstarterrest.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.kickstarterapicontract.dto.*;
+import org.example.kickstarterrest.event.PledgeEventPublisher;
 import org.example.kickstarterrest.exception.ResourceNotFoundException;
 import org.example.kickstarterrest.storage.InMemoryStorage;
 import org.springframework.context.annotation.Lazy;
@@ -24,6 +25,7 @@ public class PledgeService {
     private final RewardService rewardService;
 
     private final UserService userService;
+    private final PledgeEventPublisher eventPublisher;
 
     public PledgeResponse findById(Long id) {
         if (!storage.pledges.containsKey(id)) throw new ResourceNotFoundException("Взнос", id);
@@ -71,6 +73,7 @@ public class PledgeService {
         storage.pledges.put(id, pledge);
 
         projectService.addPledgedAmount(project.getId(), request.pledge());
+        eventPublisher.publishCreated(pledge);
         return pledge;
     }
 }

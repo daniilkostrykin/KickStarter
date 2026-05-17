@@ -15,6 +15,7 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -49,5 +50,12 @@ public class ProjectController implements ProjectApi {
     @Override
     public EntityModel<ProjectResponse> patchProject(Long id, PatchProjectRequest request) {
         return projectModelAssembler.toModel(projectService.patch(id, request));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteProject(Long id) {
+        projectService.delete(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

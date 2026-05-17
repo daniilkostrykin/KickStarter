@@ -5,6 +5,7 @@ import org.example.kickstarterapicontract.dto.PagedResponse;
 import org.example.kickstarterapicontract.dto.PatchProjectRequest;
 import org.example.kickstarterapicontract.dto.ProjectRequest;
 import org.example.kickstarterapicontract.dto.ProjectResponse;
+import org.example.kickstarterrest.event.ProjectEventPublisher;
 import org.example.kickstarterrest.exception.ResourceNotFoundException;
 import org.example.kickstarterrest.storage.InMemoryStorage;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
 public class ProjectService {
     private final InMemoryStorage storage;
     private final UserService userService;
+    private final ProjectEventPublisher eventPublisher;
 
     public ProjectResponse findById(Long id) {
         if (!storage.projects.containsKey(id)) throw new ResourceNotFoundException("Проект", id);
@@ -50,6 +52,7 @@ public class ProjectService {
                 .authorId(request.authorId())
                 .build();
         storage.projects.put(id, project);
+        eventPublisher.publishCreated(project);
         return project;
     }
 
@@ -65,7 +68,18 @@ public class ProjectService {
                 .authorId(existing.getAuthorId())
                 .build();
         storage.projects.put(id, updated);
+        eventPublisher.publishUpdated(updated);
         return updated;
+    }
+
+    public void delete(Long id) {
+        ProjectResponse project = storage.projects.get(id);
+        if (project == null) {
+            throw new IllegalArgumentException("Проект с ID " + id + " не найден!");
+        }
+        String titleForLog = project.getTitle();
+        storage.projects.remove(id);
+        eventPublisher.publishDeleted(id, titleForLog);
     }
 
     public void addPledgedAmount(Long id, BigDecimal amount) {

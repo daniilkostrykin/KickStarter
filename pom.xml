@@ -15,5 +15,7 @@
     <modules>
         <module>kickstarter-api-contract</module>
         <module>kickstarter-rest</module>
+        <module>kickstarter-events-contract</module>
+        <module>kickstarter-audit-service</module>
     </modules>
 </project>
