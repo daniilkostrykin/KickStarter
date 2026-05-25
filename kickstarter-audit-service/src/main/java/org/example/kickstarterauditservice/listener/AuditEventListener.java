@@ -120,6 +120,16 @@ public class AuditEventListener {
                 yield String.format("Зарегистрирован пользователь «%s» (email: %s)",
                         e.username(), e.email());
             }
+
+            case "project.enriched" -> {
+                long projectId = payloadNode.path("projectId").asLong(0);
+
+                double successChance = payloadNode.path("successProbability").asDouble(0.0);
+
+                yield String.format("Проект (ID: %d) прошел аналитику! Шанс на успешные сборы: %.1f%% 🚀",
+                        projectId, successChance);
+            }
+
             default -> "Неизвестное событие: " + eventType;
         };
     }

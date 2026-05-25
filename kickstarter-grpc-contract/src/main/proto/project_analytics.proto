@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+// Замени на актуальный базовый пакет твоего проекта
+option java_package = "org.example.kickstarter.grpc";
+option java_multiple_files = true;
+
+package projectanalytics;
+
+// Наш gRPC-сервис аналитики (Unary RPC: один запрос - один ответ)
+service ProjectAnalytics {
+  rpc AnalyzeProject (AnalyzeProjectRequest) returns (ProjectAnalysisResponse);
+}
+
+// Запрос: то, что мост будет отправлять в калькулятор
+message AnalyzeProjectRequest {
+  int64 project_id = 1;
+  double goal = 2;
+  int32 days_active = 3;
+  int32 description_length = 4;
+}
+
+// Ответ: то, что калькулятор вернет обратно
+message ProjectAnalysisResponse {
+  int64 project_id = 1;
+  double success_probability = 2; // Шанс успеха в % (например, 85.5)
+  string hype_level = 3;          // "LOW", "MEDIUM", "HIGH"
+  int32 estimated_backers = 4;    // Примерное число нужных спонсоров
+}

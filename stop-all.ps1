@@ -1,4 +1,4 @@
-Write-Host "1. Остановка и удаление всех контейнеров и сетей проекта..." -ForegroundColor Red
+﻿Write-Host "1. Остановка и удаление всех контейнеров и сетей проекта..." -ForegroundColor Red
 docker compose down
 
 Write-Host "2. Очистка скомпилированных файлов Maven..." -ForegroundColor Cyan

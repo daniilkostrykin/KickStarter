@@ -1,4 +1,4 @@
-Write-Host "1. Поднятие RabbitMQ в фоновом режиме..." -ForegroundColor Cyan
+﻿Write-Host "1. Поднятие RabbitMQ в фоновом режиме..." -ForegroundColor Cyan
 docker compose up -d kickstarter-rabbitmq
 
 Write-Host "2. Очистка старых билдов..." -ForegroundColor Cyan
