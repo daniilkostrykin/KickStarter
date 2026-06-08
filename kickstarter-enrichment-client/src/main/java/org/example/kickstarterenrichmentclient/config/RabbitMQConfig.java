@@ -10,6 +10,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tools.jackson.databind.json.JsonMapper;
+import org.springframework.amqp.core.TopicExchange;
 
 /**
  * Конфигурация RabbitMQ для enrichment-клиента.

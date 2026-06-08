@@ -25,4 +25,9 @@ public sealed interface ProjectEvent {
             Long projectId,
             String title
     ) implements ProjectEvent {}
+
+    record Enriched(
+            Long projectId,
+            Double successProbability
+    ) implements ProjectEvent {}
 }

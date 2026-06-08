@@ -1,14 +1,20 @@
 package org.example.kickstarterenrichmentclient.publisher;
 
+import org.example.kickstartereventscontract.EventEnvelope;
+import org.example.kickstartereventscontract.ProjectEvent;
+import org.example.kickstartereventscontract.RoutingKeys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
-import java.time.Instant;
-import java.util.HashMap;
+
 import java.util.Map;
-import java.util.UUID;
 
 @Component
 public class EnrichmentEventPublisher {
+
+    private static final Logger log = LoggerFactory.getLogger(EnrichmentEventPublisher.class);
+    private static final String SOURCE = "grpc-enrichment-client";
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -16,28 +22,19 @@ public class EnrichmentEventPublisher {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void publishEnriched(org.example.kickstarter.grpc.ProjectAnalysisResponse response) {
-        Map<String, Object> event = new HashMap<>();
+    public void publishEnriched(Long projectId, Double successProbability) {
+        try {
+            ProjectEvent.Enriched event = new ProjectEvent.Enriched(projectId, successProbability);
 
-        // Метаданные события
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("eventId", UUID.randomUUID().toString());
-        metadata.put("eventType", "project.enriched");
-        metadata.put("source", "kickstarter-enrichment-client");
-        metadata.put("timestamp", Instant.now().toString());
+            EventEnvelope<ProjectEvent> envelope = EventEnvelope.wrap(
+                    event, SOURCE, "project.enriched"
+            );
 
-        // Полезная нагрузка (то, что посчитал gRPC сервер)
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("projectId", response.getProjectId());
-        payload.put("successProbability", response.getSuccessProbability());
-        payload.put("hypeLevel", response.getHypeLevel());
-        payload.put("estimatedBackers", response.getEstimatedBackers());
+            rabbitTemplate.convertAndSend(RoutingKeys.EXCHANGE, "project.enriched", envelope);
 
-        event.put("metadata", metadata);
-        event.put("payload", payload);
-
-        // Отправляем в наш стандартный обменник
-        rabbitTemplate.convertAndSend("kickstarter.events", "project.enriched", event);
-        System.out.println("🚀 Аналитика готова! Событие project.enriched улетело в RabbitMQ для ID: " + response.getProjectId());
+            log.info("Событие отправлено: project.enriched [projectId={}]", projectId);
+        } catch (Exception e) {
+            log.error("Не удалось отправить событие: {}", e.getMessage());
+        }
     }
 }

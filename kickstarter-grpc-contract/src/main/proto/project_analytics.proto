@@ -1,15 +1,25 @@
 syntax = "proto3";
 
-// Замени на актуальный базовый пакет твоего проекта
+// Java-пакет для сгенерированных классов
 option java_package = "org.example.kickstarter.grpc";
+
+// Все сгенерированные классы будут в отдельных файлах (не во вложенных классах)
 option java_multiple_files = true;
 
+// Пакет proto (для именования в других .proto файлах при импорте)
 package projectanalytics;
 
-// Наш gRPC-сервис аналитики (Unary RPC: один запрос - один ответ)
+// Сервисы
+// Unary RPC - один запрос это один ответ (типа аналог REST GET/POST)
 service ProjectAnalytics {
   rpc AnalyzeProject (AnalyzeProjectRequest) returns (ProjectAnalysisResponse);
 }
+
+// Сообщения
+// В proto3 все поля опциональны по умолчанию (zero-value = не задано).
+// Номера полей (1, 2, 3...) используются в бинарном формате —
+// они не должны меняться после релиза
+// чтобы не нарушить совместимость
 
 // Запрос: то, что мост будет отправлять в калькулятор
 message AnalyzeProjectRequest {
