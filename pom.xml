@@ -27,6 +27,7 @@
         <module>kickstarter-grpc-server</module>
         <module>kickstarter-grpc-contract</module>
         <module>kickstarter-enrichment-client</module>
+        <module>kickstarter-notification-service</module>
     </modules>
 
     <dependencyManagement>
