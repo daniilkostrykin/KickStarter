@@ -1,10 +1,70 @@
-GRAPHQL http://localhost:8080/graphql
+### ==========================================
+### Проекты
+### ==========================================
 
-query {
-    projects {
-        id
-        title
-        goal
-        pledged
-    }
+### 1.1 Получить список проектов
+GET http://localhost:8080/api/projects?page=0&size=5
+Accept: application/json
+
+### 1.2 Создать новый проект
+# @name createProject
+POST http://localhost:8080/api/projects
+Content-Type: application/json
+
+{
+  "title": "Умный рюкзак 2.0",
+  "description": "Рюкзак с солнечной панелью и GPS",
+  "goal": 100000,
+  "deadline": "2026-12-31T23:59:59Z",
+  "authorId": 1
 }
+
+> {%
+    client.global.set("projectId", response.body.id);
+%}
+
+### 1.3 Обновить статус проекта на ACTIVE
+PATCH http://localhost:8080/api/projects/{{projectId}}
+Content-Type: application/json
+
+{
+  "status": "ACTIVE"
+}
+
+
+### ==========================================
+### Взносы
+### ==========================================
+
+### 2.1 Создать взнос (донат 10000 в только что созданный проект)
+POST http://localhost:8080/api/pledges
+Content-Type: application/json
+
+{
+  "projectId": {{projectId}},
+  "rewardId": 1,
+  "pledge": 10000,
+  "userId": 2
+}
+
+
+### ==========================================
+### GraphQL
+### ==========================================
+
+### 3.1 Выборка проекта с автором и наградами
+POST http://localhost:8080/graphql
+Content-Type: application/json
+
+{
+  "query": "query { projects(page: 0, size: 5) { content { title pledged author { username } rewards(page:0, size:5) { content { title } } } } }"
+}
+
+
+### ==========================================
+### Аудит
+### ==========================================
+
+### 4.1 Просмотр логов аудита
+GET http://localhost:8081/api/audit?limit=20
+Accept: application/json

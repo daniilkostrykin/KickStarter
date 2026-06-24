@@ -42,3 +42,9 @@
         </dependencies>
     </dependencyManagement>
 </project>
+        <!--
+        http://localhost:8080/swagger-ui/index.html
+        http://localhost:8080/graphiql?path=/graphql
+        http://localhost:8084/
+        http://localhost:15672/#/queues
+        -->

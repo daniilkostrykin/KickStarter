@@ -19,13 +19,13 @@ public class RewardEventPublisher {
 
     public void publishCreated(RewardResponse reward) {
         var event = new RewardEvent.Created(
-                reward.getId(), // если у тебя в DTO другое имя (например, getRewardId), поправь под себя
+                reward.getId(),
                 reward.getTitle(),
                 reward.getDescription(),
                 reward.getMinPrice(),
                 reward.getProjectId()
         );
-        // Если в RoutingKeys у тебя нет константы REWARD_CREATED, можно передать строку "reward.created"
+
         send(RoutingKeys.REWARD_CREATED, event);
     }
 

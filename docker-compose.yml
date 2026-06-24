@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   kickstarter-rabbitmq:
     image: rabbitmq:4.0-management
@@ -19,42 +17,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
-    restart: unless-stopped
-
-  kickstarter-api:
-    build:
-      context: .
-      dockerfile: Dockerfile.rest  # <-- Указываем на наш новый файл
-    container_name: kickstarter-app
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_RABBITMQ_HOST=kickstarter-rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-    depends_on:
-      kickstarter-rabbitmq:
-        condition: service_healthy
-    networks:
-      - kickstarter-network
-    restart: unless-stopped
-
-  kickstarter-audit:
-    build:
-      context: .
-      dockerfile: Dockerfile.audit # <-- Указываем на файл аудита
-    container_name: kickstarter-audit-app
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_RABBITMQ_HOST=kickstarter-rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-    depends_on:
-      kickstarter-rabbitmq:
-        condition: service_healthy
-    networks:
-      - kickstarter-network
     restart: unless-stopped
 
 networks:

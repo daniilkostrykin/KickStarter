@@ -89,8 +89,8 @@ public class EventNotificationListener {
 
     private String buildTitle(String eventType) {
         return switch (eventType) {
-            case "project.created"  -> "🚀 Новый проект";
-            case "project.enriched" -> "📊 Аналитика проекта";
+            case "project.created"  -> "Новый проект";
+            case "project.enriched" -> "Аналитика проекта";
             default                 -> "Событие: " + eventType;
         };
     }

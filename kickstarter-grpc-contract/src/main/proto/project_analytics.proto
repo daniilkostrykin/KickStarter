@@ -21,7 +21,7 @@ service ProjectAnalytics {
 // они не должны меняться после релиза
 // чтобы не нарушить совместимость
 
-// Запрос: то, что мост будет отправлять в калькулятор
+// Запрос
 message AnalyzeProjectRequest {
   int64 project_id = 1;
   double goal = 2;
@@ -29,7 +29,7 @@ message AnalyzeProjectRequest {
   int32 description_length = 4;
 }
 
-// Ответ: то, что калькулятор вернет обратно
+// Ответ
 message ProjectAnalysisResponse {
   int64 project_id = 1;
   double success_probability = 2; // Шанс успеха в % (например, 85.5)

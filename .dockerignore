@@ -1,0 +1,10 @@
+**/target/
+**/out/
+
+.idea/
+*.iml
+*.class
+
+*.log
+.git/
+.github/

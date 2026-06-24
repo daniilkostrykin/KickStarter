@@ -29,11 +29,10 @@ public class PledgeResponse extends RepresentationModel<PledgeResponse> {
     @Schema(description = "ID спонсора", example = "1000")
     private Long userId;
 
-
     @Schema(description = "Сумма взноса", example = "1500.00")
     private BigDecimal amount;
 
-    @Schema(description = "Статус", example = "ACTIVE")
+    @Schema(description = "Статус", example = "AUTHORIZED")
     private PledgeStatus status;
 
     @Schema(description = "Дата транзакции", example = "2026-03-29T21:40:45.422407")
