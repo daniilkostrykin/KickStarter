@@ -1,7 +1,12 @@
 spring:
   application:
     name: audit-service
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8085/realms/kickstarter}
+          audiences: audit-service
     # Подключение к локальному брокеру
   rabbitmq:
     host: localhost
@@ -13,14 +18,15 @@ spring:
     # Это позволяет связать запрос в demo-rest с обработкой в audit-service.
     listener:
       simple:
+        auto-startup: false
         observation-enabled: true
         # При ошибке обработки повторить 3 раза с интервалом 2 секунды.
         # После исчерпания попыток сообщение уходит в DLQ (настроено в RabbitMQConfig).
         retry:
           enabled: true
           initial-interval: 2000
-          max-attempts: 3
           multiplier: 2.0
+          max-retries: 3
 
     template:
       observation-enabled: true

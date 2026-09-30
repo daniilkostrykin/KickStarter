@@ -2,6 +2,7 @@ package org.example.kickstarterauditservice.controller;
 
 import org.example.kickstarterauditservice.model.AuditEntry;
 import org.example.kickstarterauditservice.storage.AuditStorage;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,10 +13,7 @@ import java.util.Map;
 
 /**
  * REST-контроллер для просмотра журнала аудита.
- *
- * Этот endpoint предназначен для администраторов и демонстрации —
- * в промышленной системе аудит-лог обычно доступен через Kibana/Grafana,
- * а не через REST API.
+ * Защищен OAuth2 JWT Resource Server.
  */
 @RestController
 @RequestMapping("/api/audit")
@@ -28,11 +26,11 @@ public class AuditController {
     }
 
     /**
-     * Возвращает последние аудит-записи.
-     *
-     * Пример: GET /api/audit?limit=50
+     * Основной метод: просмотр аудит-лога.
+     * Доступен только сервисам с ролью SERVICE (Client Credentials).
      */
     @GetMapping
+    @PreAuthorize("hasRole('SERVICE')")
     public Map<String, Object> getAuditLog(
             @RequestParam(defaultValue = "100") int limit) {
 
@@ -42,6 +40,19 @@ public class AuditController {
                 "totalEntries", auditStorage.count(),
                 "showing", entries.size(),
                 "entries", entries
+        );
+    }
+
+    /**
+     * Служебный метод: диагностика состояния сервиса.
+     * Доступен только операторам с ролью OPERATOR.
+     */
+    @GetMapping("/admin/info")
+    @PreAuthorize("hasRole('OPERATOR')")
+    public Map<String, String> info() {
+        return Map.of(
+                "service", "kickstarter-audit-service",
+                "status", "ok"
         );
     }
 }

@@ -1,0 +1,114 @@
+### ===================================================================
+### 1. АНОНИМНЫЙ ЗАПРОС (Ожидается 401 Unauthorized)
+### ===================================================================
+GET http://localhost:8081/api/audit?limit=10
+
+> {%
+    client.test("Запрос без токена отклонен (401 Unauthorized)", function() {
+        client.assert(response.status === 401, "Ожидался статус 401, получен: " + response.status);
+    });
+%}
+
+
+### ===================================================================
+### 2. СЕРВИСНЫЙ КЛИЕНТ (kickstarter-service-client)
+### ===================================================================
+
+### 2.1 Получение JWT-токена сервиса через Client Credentials
+POST http://localhost:8085/realms/kickstarter/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=kickstarter-service-client&client_secret=service-secret
+
+> {%
+    client.test("Токен сервиса успешно получен (200 OK)", function() {
+        client.assert(response.status === 200, "Ожидался статус 200");
+    });
+    client.global.set("serviceToken", response.body.access_token);
+%}
+
+### 2.2 Чтение аудит-лога сервисом С РОЛЬЮ SERVICE (ожидается 200 OK)
+GET http://localhost:8081/api/audit?limit=10
+Authorization: Bearer {{serviceToken}}
+
+> {%
+    client.test("Сервис успешно получил журнал аудита (200 OK)", function() {
+        client.assert(response.status === 200, "Ожидался статус 200");
+    });
+%}
+
+### 2.3 Попытка сервиса зайти в диагностику оператора (ожидается 403 Forbidden)
+GET http://localhost:8081/api/audit/admin/info
+Authorization: Bearer {{serviceToken}}
+
+> {%
+    client.test("Сервису отказано в доступе к диагностике оператора (403 Forbidden)", function() {
+        client.assert(response.status === 403, "Ожидался статус 403");
+    });
+%}
+
+
+### ===================================================================
+### 3. ОПЕРАТОРСКИЙ КЛИЕНТ (kickstarter-ops-client)
+### ===================================================================
+
+### 3.1 Получение токена оператора через Client Credentials
+POST http://localhost:8085/realms/kickstarter/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=kickstarter-ops-client&client_secret=ops-secret
+
+> {%
+    client.test("Токен оператора успешно получен (200 OK)", function() {
+        client.assert(response.status === 200, "Ожидался статус 200");
+    });
+    client.global.set("opsToken", response.body.access_token);
+%}
+
+### 3.2 Доступ к диагностике оператором С РОЛЬЮ OPERATOR (ожидается 200 OK)
+GET http://localhost:8081/api/audit/admin/info
+Authorization: Bearer {{opsToken}}
+
+> {%
+    client.test("Оператор успешно получил диагностику (200 OK)", function() {
+        client.assert(response.status === 200, "Ожидался статус 200");
+    });
+%}
+
+### 3.3 Попытка оператора прочитать бизнес-аудит (ожидается 403 Forbidden)
+GET http://localhost:8081/api/audit?limit=10
+Authorization: Bearer {{opsToken}}
+
+> {%
+    client.test("Оператору отказано в доступе к бизнес-аудиту (403 Forbidden)", function() {
+        client.assert(response.status === 403, "Ожидался статус 403");
+    });
+%}
+
+
+### ===================================================================
+### 4. НЕГАТИВНЫЙ ТЕСТ: ТОКЕН ДЛЯ ЧУЖОГО СЕРВИСА (AUDIENCE MISMATCH)
+### ===================================================================
+
+### 4.1 Получение токена клиента с аудиторией 'other-api'
+POST http://localhost:8085/realms/kickstarter/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=kickstarter-other-client&client_secret=other-secret
+
+> {%
+    client.test("Токен для other-api получен (200 OK)", function() {
+        client.assert(response.status === 200, "Ожидался статус 200");
+    });
+    client.global.set("otherToken", response.body.access_token);
+%}
+
+### 4.2 Попытка обратиться к нашему аудиту с токеном чужого API (ожидается 401 Unauthorized)
+GET http://localhost:8081/api/audit?limit=10
+Authorization: Bearer {{otherToken}}
+
+> {%
+    client.test("Токен с чужой аудиторией отклонен Resource Server'ом (401 Unauthorized)", function() {
+        client.assert(response.status === 401, "Ожидался статус 401, получен: " + response.status);
+    });
+%}
