@@ -27,12 +27,14 @@ public class UserController implements UserApi {
 
     @Override
     public ResponseEntity<EntityModel<UserResponse>> createUser(UserRequest userRequest) {
-        return null;
+        UserResponse created = userService.create(userRequest);
+        EntityModel<UserResponse> model = userModelAssembler.toModel(created);
+        return ResponseEntity.created(model.getRequiredLink("self").toUri()).body(model);
     }
 
     @Override
     public EntityModel<UserResponse> getUserById(Long id) {
-        return null;
+        return userModelAssembler.toModel(userService.findById(id));
     }
 
     @Override

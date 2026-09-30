@@ -15,7 +15,11 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({ResourceNotFoundException.class, ProjectNotFoundException.class})
+    @ExceptionHandler({
+            ResourceNotFoundException.class,
+            org.example.kickstarterapicontract.exception.ResourceNotFoundException.class,
+            ProjectNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(RuntimeException ex, HttpServletRequest request) {
         return new ErrorResponse(404, "https://api.kickstarter.com/errors/not-found",
@@ -37,5 +41,16 @@ public class GlobalExceptionHandler {
                 .toList();
         return new ErrorResponse(400, "https://api.kickstarter.com/errors/validation",
                 "Ошибка валидации", "Неверный формат данных запроса", request.getRequestURI(), Instant.now(), errors);
+    }
+
+
+    @ExceptionHandler({
+            DuplicateResourceException.class,
+            org.springframework.dao.DataIntegrityViolationException.class
+    })
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConflict(Exception ex, HttpServletRequest request) {
+        return new ErrorResponse(409, "https://api.kickstarter.com/errors/conflict",
+                "Конфликт данных", ex.getMessage(), request.getRequestURI(), Instant.now(), null);
     }
 }

@@ -19,9 +19,30 @@ services:
       retries: 3
     restart: unless-stopped
 
+  kickstarter-postgres:
+    image: postgres:16-alpine
+    container_name: kickstarter-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: kickstarter_db
+      POSTGRES_USER: kickstarter_user
+      POSTGRES_PASSWORD: kickstarter_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kickstarter-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kickstarter_user -d kickstarter_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
 networks:
   kickstarter-network:
     driver: bridge
 
 volumes:
   rabbitmq_data:
+  postgres_data:

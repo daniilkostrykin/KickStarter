@@ -1,79 +1,103 @@
 package org.example.kickstarterrest.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.kickstarterapicontract.dto.*;
+import org.example.kickstarterapicontract.dto.PagedResponse;
+import org.example.kickstarterapicontract.dto.PledgeRequest;
+import org.example.kickstarterapicontract.dto.PledgeResponse;
+import org.example.kickstarterapicontract.dto.PledgeStatus;
+import org.example.kickstarterapicontract.exception.ResourceNotFoundException;
+import org.example.kickstarterrest.entity.PledgeEntity;
+import org.example.kickstarterrest.entity.ProjectEntity;
+import org.example.kickstarterrest.entity.RewardEntity;
+import org.example.kickstarterrest.entity.UserEntity;
 import org.example.kickstarterrest.event.PledgeEventPublisher;
-import org.example.kickstarterrest.exception.ResourceNotFoundException;
-import org.example.kickstarterrest.storage.InMemoryStorage;
-import org.springframework.context.annotation.Lazy;
+import org.example.kickstarterrest.repository.PledgeRepository;
+import org.example.kickstarterrest.repository.ProjectRepository;
+import org.example.kickstarterrest.repository.RewardRepository;
+import org.example.kickstarterrest.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class PledgeService {
-    private final InMemoryStorage storage;
 
-    @Lazy
-    private final ProjectService projectService;
-
-    @Lazy
-    private final RewardService rewardService;
-
-    private final UserService userService;
+    private final PledgeRepository pledgeRepository;
+    private final ProjectRepository projectRepository;
+    private final RewardRepository rewardRepository;
+    private final UserRepository userRepository;
     private final PledgeEventPublisher eventPublisher;
 
+    @Transactional(readOnly = true)
     public PledgeResponse findById(Long id) {
-        if (!storage.pledges.containsKey(id)) throw new ResourceNotFoundException("Взнос", id);
-        return storage.pledges.get(id);
+        return pledgeRepository.findById(id)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Взнос", id));
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<PledgeResponse> findAllPledges(Long projectId, int page, int size) {
-        Stream<PledgeResponse> stream = storage.pledges.values().stream()
-                .sorted(Comparator.comparing(PledgeResponse::getPledgeId));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("id").ascending());
+        Page<PledgeEntity> entityPage = (projectId != null)
+                ? pledgeRepository.findByProjectId(projectId, pageRequest)
+                : pledgeRepository.findAll(pageRequest);
 
-        if (projectId != null) {
-            stream = stream.filter(p -> projectId.equals(p.getProjectId()));
-        }
-
-        List<PledgeResponse> allPledges = stream.toList();
-        int totalElements = allPledges.size();
-        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 1;
-        int from = page * size;
-        int to = Math.min(from + size, totalElements);
-        List<PledgeResponse> content = (from >= totalElements) ? List.of() : allPledges.subList(from, to);
-
-        return new PagedResponse<>(content, page, size, totalElements, totalPages, page >= totalPages - 1);
+        return new PagedResponse<>(
+                entityPage.getContent().stream().map(this::toResponse).toList(),
+                entityPage.getNumber(),
+                entityPage.getSize(),
+                entityPage.getTotalElements(),
+                entityPage.getTotalPages(),
+                entityPage.isLast()
+        );
     }
 
+    @Transactional
     public PledgeResponse create(PledgeRequest request) {
-        userService.findById(request.userId());
-        ProjectResponse project = projectService.findById(request.projectId());
-        RewardResponse reward = rewardService.findRewardById(request.rewardId());
+        UserEntity user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь", request.userId()));
+        ProjectEntity project = projectRepository.findById(request.projectId())
+                .orElseThrow(() -> new ResourceNotFoundException("Проект", request.projectId()));
+        RewardEntity reward = rewardRepository.findById(request.rewardId())
+                .orElseThrow(() -> new ResourceNotFoundException("Reward", request.rewardId()));
 
         if (request.pledge().compareTo(reward.getMinPrice()) < 0) {
             throw new IllegalArgumentException("Сумма взноса меньше минимальной цены вознаграждения!");
         }
 
-        Long id = storage.pledgeSequence.incrementAndGet();
-        PledgeResponse pledge = PledgeResponse.builder()
-                .pledgeId(id)
-                .projectId(project.getId())
-                .rewardId(reward.getId())
+        PledgeEntity entity = PledgeEntity.builder()
+                .project(project)
+                .reward(reward)
+                .user(user)
                 .amount(request.pledge())
                 .status(PledgeStatus.AUTHORIZED)
                 .transactionDate(OffsetDateTime.now())
-                .userId(request.userId())
                 .build();
 
-        storage.pledges.put(id, pledge);
+        PledgeEntity saved = pledgeRepository.save(entity);
 
-        projectService.addPledgedAmount(project.getId(), request.pledge());
-        eventPublisher.publishCreated(pledge);
-        return pledge;
+        project.setPledged(project.getPledged().add(request.pledge()));
+        projectRepository.save(project);
+
+        PledgeResponse response = toResponse(saved);
+        eventPublisher.publishCreated(response);
+        return response;
+    }
+
+    public PledgeResponse toResponse(PledgeEntity entity) {
+        return PledgeResponse.builder()
+                .pledgeId(entity.getId())
+                .projectId(entity.getProject().getId())
+                .rewardId(entity.getReward().getId())
+                .userId(entity.getUser().getId())
+                .amount(entity.getAmount())
+                .status(entity.getStatus())
+                .transactionDate(entity.getTransactionDate())
+                .build();
     }
 }

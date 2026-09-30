@@ -4,62 +4,71 @@ import lombok.RequiredArgsConstructor;
 import org.example.kickstarterapicontract.dto.PagedResponse;
 import org.example.kickstarterapicontract.dto.UserRequest;
 import org.example.kickstarterapicontract.dto.UserResponse;
+import org.example.kickstarterrest.entity.UserEntity;
 import org.example.kickstarterrest.event.UserEventPublisher;
+import org.example.kickstarterrest.exception.DuplicateResourceException;
 import org.example.kickstarterrest.exception.ResourceNotFoundException;
-import org.example.kickstarterrest.storage.InMemoryStorage;
+import org.example.kickstarterrest.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-    private final InMemoryStorage storage;
+    private final UserRepository userRepository;
     private final UserEventPublisher eventPublisher;
 
+    @Transactional(readOnly = true)
     public PagedResponse<UserResponse> findAll(String usernameSearch, String emailSearch, int page, int size) {
-        java.util.stream.Stream<UserResponse> stream = storage.users.values().stream()
-                .sorted(java.util.Comparator.comparingLong(UserResponse::getId));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("id").ascending());
+        Page<UserEntity> entityPage = userRepository.searchUsers(usernameSearch, emailSearch, pageRequest);
 
-        if (usernameSearch != null && !usernameSearch.isBlank()) {
-            String q = usernameSearch.toLowerCase();
-            stream = stream.filter(u -> u.getUsername() != null && u.getUsername().toLowerCase().contains(q));
-        }
-
-        if (emailSearch != null && !emailSearch.isBlank()) {
-            String q = emailSearch.toLowerCase();
-            stream = stream.filter(u -> u.getEmail() != null && u.getEmail().toLowerCase().contains(q));
-        }
-
-        java.util.List<UserResponse> allUsers = stream.toList();
-
-        int totalElements = allUsers.size();
-        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 1;
-
-        int from = page * size;
-        int to = Math.min(from + size, totalElements);
-
-        java.util.List<UserResponse> content = (from >= totalElements) ? java.util.List.of() : allUsers.subList(from, to);
-
-        return new PagedResponse<>(content, page, size, totalElements, totalPages, page >= totalPages - 1);
+        return new PagedResponse<>(
+                entityPage.getContent().stream().map(this::toResponse).toList(),
+                entityPage.getNumber(),
+                entityPage.getSize(),
+                entityPage.getTotalElements(),
+                entityPage.getTotalPages(),
+                entityPage.isLast()
+        );
     }
 
+    @Transactional
     public UserResponse create(UserRequest request) {
-        Long id = storage.userSequence.incrementAndGet();
-        UserResponse user = UserResponse.builder()
-                .id(id)
+        if (userRepository.existsByUsername(request.username())) {
+            throw new DuplicateResourceException("Пользователь с никнеймом '" + request.username() + "' уже существует");
+        }
+        if (userRepository.existsByEmail(request.email())) {
+            throw new DuplicateResourceException("Пользователь с почтой '" + request.email() + "' уже существует");
+        }
+
+        UserEntity entity = UserEntity.builder()
                 .username(request.username())
                 .email(request.email())
                 .build();
 
-        storage.users.put(id, user);
-        eventPublisher.publishCreated(user);
-        return user;
+        UserEntity saved = userRepository.save(entity);
+        UserResponse response = toResponse(saved);
+        eventPublisher.publishCreated(response);
+        return response;
     }
 
+    @Transactional(readOnly = true)
     public UserResponse findById(Long id) {
-        if (!storage.users.containsKey(id)) {
-            throw new ResourceNotFoundException("Пользователь", id);
-        }
-        return storage.users.get(id);
+        return userRepository.findById(id)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь", id));
+    }
+
+    public UserResponse toResponse(UserEntity entity) {
+        return UserResponse.builder()
+                .id(entity.getId())
+                .username(entity.getUsername())
+                .email(entity.getEmail())
+                .build();
     }
 }

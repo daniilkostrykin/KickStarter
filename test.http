@@ -12,7 +12,7 @@ POST http://localhost:8080/api/projects
 Content-Type: application/json
 
 {
-  "title": "Умный рюкзак 2.0",
+  "title": "Умный рюкзак 3.0",
   "description": "Рюкзак с солнечной панелью и GPS",
   "goal": 100000,
   "deadline": "2026-12-31T23:59:59Z",
