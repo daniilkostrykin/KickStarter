@@ -15,6 +15,7 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,17 +27,20 @@ public class ProjectController implements ProjectApi {
     private final PagedResourcesAssembler<ProjectResponse> pagedProjectsAssembler;
 
     @Override
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     public ResponseEntity<EntityModel<ProjectResponse>> createProject(ProjectRequest request) {
         EntityModel<ProjectResponse> model = projectModelAssembler.toModel(projectService.create(request));
         return ResponseEntity.created(model.getRequiredLink("self").toUri()).body(model);
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('BACKER', 'CREATOR', 'ADMIN')")
     public EntityModel<ProjectResponse> getProjectById(Long id) {
         return projectModelAssembler.toModel(projectService.findById(id));
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('BACKER', 'CREATOR', 'ADMIN')")
     public PagedModel<EntityModel<ProjectResponse>> getAllProjects(int page, int size) {
         PagedResponse<ProjectResponse> paged = projectService.findAll(page, size);
         Page<ProjectResponse> springPage = new PageImpl<>(
@@ -48,11 +52,13 @@ public class ProjectController implements ProjectApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
     public EntityModel<ProjectResponse> patchProject(Long id, PatchProjectRequest request) {
         return projectModelAssembler.toModel(projectService.patch(id, request));
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProject(Long id) {
         projectService.delete(id);
 

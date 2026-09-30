@@ -1,0 +1,265 @@
+### ===================================================================
+### 1. АНОНИМНЫЙ ЗАПРОС (Проверка отсутствия сеанса)
+### ===================================================================
+
+### 1.1 Запрос закрытого API без cookie (ожидается 302 на /login)
+// @no-redirect
+GET http://localhost:8080/api/projects
+Accept: application/json
+
+> {%
+    client.test("Анонимный запрос перенаправлен на страницу входа (302)", function() {
+        client.assert(response.status === 302, "Ожидался статус 302, получен: " + response.status);
+    });
+%}
+
+
+### ===================================================================
+### 2. СЦЕНАРИЙ АВТОРА (CREATOR)
+### ===================================================================
+
+### 2.1 Получить форму /login и извлечь CSRF-токен формы
+GET http://localhost:8080/login
+
+> {%
+    var match = response.body.match(/name="_csrf"[^>]*value="([^"]+)"/);
+    client.global.set("loginCsrf", match ? match[1] : "");
+%}
+
+### 2.2 Вход под creator (создается JSESSIONID)
+// @no-redirect
+POST http://localhost:8080/login
+Content-Type: application/x-www-form-urlencoded
+
+username=creator&password=creator&_csrf={{loginCsrf}}
+
+> {%
+    client.test("Успешный вход автора (302)", function() {
+        client.assert(response.status === 302, "Ожидался статус 302");
+    });
+    // Сохраняем JSESSIONID, чтобы после logout проверить его аннулирование сервером (кейс 7)
+    var sessionCookie = response.headers.valuesOf("Set-Cookie").find(function(c) {
+        return c.indexOf("JSESSIONID=") === 0;
+    });
+    if (sessionCookie) {
+        client.global.set("oldSessionId", sessionCookie.split(";")[0].split("=")[1]);
+    }
+%}
+
+### 2.3 Получить CSRF-токен для REST API
+GET http://localhost:8080/csrf
+Accept: application/json
+
+> {%
+    client.global.set("creatorApiCsrf", response.body.token);
+%}
+
+### 2.4 Создание проекта автором С ТОКЕНОМ CSRF (ожидается 201 Created)
+POST http://localhost:8080/api/projects
+Content-Type: application/json
+X-XSRF-TOKEN: {{creatorApiCsrf}}
+
+{
+  "title": "Kickstarter Project {{$random.alphanumeric(6)}}",
+  "description": "Создание кампании автором",
+  "goal": 300000.00,
+  "deadline": "2026-12-31T23:59:59Z",
+  "authorId": 1
+}
+
+> {%
+    client.test("Автор успешно создал проект (201 Created)", function() {
+        client.assert(response.status === 201, "Ожидался статус 201");
+    });
+    client.global.set("createdProjectId", response.body.id);
+%}
+
+### 2.5 Отрицательная проверка: Запрос автора БЕЗ CSRF (ожидается 403 Forbidden)
+POST http://localhost:8080/api/projects
+Content-Type: application/json
+
+{
+  "title": "CSRF Attack Project {{$random.alphanumeric(6)}}",
+  "description": "Попытка без CSRF",
+  "goal": 10000.00,
+  "deadline": "2026-12-31T23:59:59Z",
+  "authorId": 1
+}
+
+> {%
+    client.test("Запрос без токена CSRF отклонен (403 Forbidden)", function() {
+        client.assert(response.status === 403, "Ожидался статус 403");
+    });
+%}
+
+### 2.6 Попытка автора УДАЛИТЬ проект (ожидается 403 Forbidden по роли)
+DELETE http://localhost:8080/api/projects/{{createdProjectId}}
+X-XSRF-TOKEN: {{creatorApiCsrf}}
+
+> {%
+    client.test("Автору запрещено удалять проекты (403 Forbidden)", function() {
+        client.assert(response.status === 403, "Ожидался статус 403 Forbidden, получен: " + response.status);
+    });
+%}
+
+### 2.7 Выход автора (Logout)
+// @no-redirect
+POST http://localhost:8080/logout
+Content-Type: application/x-www-form-urlencoded
+X-XSRF-TOKEN: {{creatorApiCsrf}}
+
+> {%
+    client.test("Выход автора выполнен (302)", function() {
+        client.assert(response.status === 302, "Ожидался статус 302");
+    });
+%}
+
+### 2.8 Кейс 7: запрос со СТАРОЙ сессионной cookie после выхода (ожидается 302 на /login)
+// @no-redirect
+GET http://localhost:8080/api/projects
+Accept: application/json
+Cookie: JSESSIONID={{oldSessionId}}
+
+> {%
+    client.test("Старая сессия автора аннулирована сервером (302)", function() {
+        client.assert(response.status === 302, "Ожидался статус 302 (сессия аннулирована), получен: " + response.status);
+    });
+%}
+
+
+### ===================================================================
+### 3. СЦЕНАРИЙ АДМИНИСТРАТОРА (ADMIN)
+### ===================================================================
+
+### 3.1 Получить токен формы входа для admin
+GET http://localhost:8080/login
+
+> {%
+    var match = response.body.match(/name="_csrf"[^>]*value="([^"]+)"/);
+    client.global.set("adminLoginCsrf", match ? match[1] : "");
+%}
+
+### 3.2 Вход под admin
+// @no-redirect
+POST http://localhost:8080/login
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password=admin&_csrf={{adminLoginCsrf}}
+
+> {%
+    client.test("Успешный вход администратора (302)", function() {
+        client.assert(response.status === 302, "Ожидался статус 302");
+    });
+    // Сохраняем JSESSIONID, чтобы после logout проверить его аннулирование сервером (кейс 7)
+    var sessionCookie = response.headers.valuesOf("Set-Cookie").find(function(c) {
+        return c.indexOf("JSESSIONID=") === 0;
+    });
+    if (sessionCookie) {
+        client.global.set("oldSessionId", sessionCookie.split(";")[0].split("=")[1]);
+    }
+%}
+
+### 3.3 Получить CSRF-токен администратора
+GET http://localhost:8080/csrf
+Accept: application/json
+
+> {%
+    client.global.set("adminApiCsrf", response.body.token);
+%}
+
+### 3.4 Удаление проекта администратором (ожидается 204 No Content)
+DELETE http://localhost:8080/api/projects/{{createdProjectId}}
+X-XSRF-TOKEN: {{adminApiCsrf}}
+
+> {%
+    client.test("Администратор успешно удалил проект (204 No Content)", function() {
+        client.assert(response.status === 204, "Ожидался статус 204, получен: " + response.status);
+    });
+%}
+
+### 3.5 Выход администратора (Logout)
+// @no-redirect
+POST http://localhost:8080/logout
+Content-Type: application/x-www-form-urlencoded
+X-XSRF-TOKEN: {{adminApiCsrf}}
+
+> {%
+    client.test("Выход администратора выполнен (302)", function() {
+        client.assert(response.status === 302, "Ожидался статус 302");
+    });
+%}
+
+### 3.6 Кейс 7: запрос со СТАРОЙ сессионной cookie администратора после выхода (ожидается 302 на /login)
+// @no-redirect
+GET http://localhost:8080/api/projects
+Accept: application/json
+Cookie: JSESSIONID={{oldSessionId}}
+
+> {%
+    client.test("Старая сессия администратора аннулирована сервером (302)", function() {
+        client.assert(response.status === 302, "Ожидался статус 302 (сессия аннулирована), получен: " + response.status);
+    });
+%}
+
+
+### ===================================================================
+### 4. СЦЕНАРИЙ СПОНСОРА (BACKER)
+### ===================================================================
+
+### 4.1 Получить токен формы входа для backer
+GET http://localhost:8080/login
+
+> {%
+    var match = response.body.match(/name="_csrf"[^>]*value="([^"]+)"/);
+    client.global.set("backerLoginCsrf", match ? match[1] : "");
+%}
+
+### 4.2 Вход под backer
+// @no-redirect
+POST http://localhost:8080/login
+Content-Type: application/x-www-form-urlencoded
+
+username=backer&password=backer&_csrf={{backerLoginCsrf}}
+
+> {%
+    client.test("Успешный вход спонсора (302)", function() {
+        client.assert(response.status === 302, "Ожидался статус 302");
+    });
+%}
+
+### 4.3 Получить CSRF токен спонсора
+GET http://localhost:8080/csrf
+Accept: application/json
+
+> {%
+    client.global.set("backerApiCsrf", response.body.token);
+%}
+
+### 4.4 Чтение разрешено роли BACKER (ожидается 200 OK)
+GET http://localhost:8080/api/projects
+Accept: application/json
+
+> {%
+    client.test("Спонсор успешно просматривает проекты (200 OK)", function() {
+        client.assert(response.status === 200, "Ожидался статус 200");
+    });
+%}
+
+### 4.5 Создание проекта ЗАПРЕЩЕНО роли BACKER (ожидается 403 Forbidden)
+POST http://localhost:8080/api/projects
+Content-Type: application/json
+X-XSRF-TOKEN: {{backerApiCsrf}}
+
+{
+  "title": "Forbidden Backer Project {{$random.alphanumeric(6)}}",
+  "description": "Попытка создать проект спонсором",
+  "goal": 50000.00,
+  "deadline": "2026-12-31T23:59:59Z",
+  "authorId": 1
+}
+
+> {%
+    client.test("Создание проекта спонсору отклонено правами доступа (403 Forbidden)", function() {
+        client.assert(response.status === 403, "Ожидался статус 403");
+    });
+%}
