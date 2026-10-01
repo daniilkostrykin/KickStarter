@@ -1,6 +1,4 @@
-### ===================================================================
 ### 1. АНОНИМНЫЙ ЗАПРОС (Ожидается 401 Unauthorized)
-### ===================================================================
 GET http://localhost:8081/api/audit?limit=10
 
 > {%
@@ -10,9 +8,8 @@ GET http://localhost:8081/api/audit?limit=10
 %}
 
 
-### ===================================================================
 ### 2. СЕРВИСНЫЙ КЛИЕНТ (kickstarter-service-client)
-### ===================================================================
+
 
 ### 2.1 Получение JWT-токена сервиса через Client Credentials
 POST http://localhost:8085/realms/kickstarter/protocol/openid-connect/token
@@ -48,9 +45,7 @@ Authorization: Bearer {{serviceToken}}
 %}
 
 
-### ===================================================================
 ### 3. ОПЕРАТОРСКИЙ КЛИЕНТ (kickstarter-ops-client)
-### ===================================================================
 
 ### 3.1 Получение токена оператора через Client Credentials
 POST http://localhost:8085/realms/kickstarter/protocol/openid-connect/token
@@ -85,10 +80,7 @@ Authorization: Bearer {{opsToken}}
     });
 %}
 
-
-### ===================================================================
 ### 4. НЕГАТИВНЫЙ ТЕСТ: ТОКЕН ДЛЯ ЧУЖОГО СЕРВИСА (AUDIENCE MISMATCH)
-### ===================================================================
 
 ### 4.1 Получение токена клиента с аудиторией 'other-api'
 POST http://localhost:8085/realms/kickstarter/protocol/openid-connect/token

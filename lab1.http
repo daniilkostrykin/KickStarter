@@ -1,0 +1,56 @@
+### 0. ВХОД И ПОЛУЧЕНИЕ CSRF
+
+### 0.1 Открываем страницу логина и забираем CSRF
+GET http://localhost:8080/login
+
+> {%
+    var match = response.body.match(/name="_csrf"[^>]*value="([^"]+)"/);
+    client.global.set("loginCsrf", match ? match[1] : "");
+%}
+
+### 0.2 Вход под создателем (creator / creator)
+POST http://localhost:8080/login
+Content-Type: application/x-www-form-urlencoded
+
+username=creator&password=creator&_csrf={{loginCsrf}}
+
+### 0.3 Получаем рабочий API-токен CSRF
+GET http://localhost:8080/csrf
+
+> {%
+    client.global.set("csrfToken", response.body.token);
+%}
+
+### ДЛЯ СКРИНШОТА 2: Создание проекта (201) и Конфликт (409)
+
+### 1. Первичное создание проекта -> ОЖИДАЕТСЯ: 201 Created
+POST http://localhost:8080/api/projects
+Content-Type: application/json
+X-XSRF-TOKEN: {{csrfToken}}
+
+{
+  "title": "Kickstarter Project 4",
+  "description": "Создание кампании автором",
+  "goal": 300000.00,
+  "deadline": "2026-12-31T23:59:59Z",
+  "authorId": 1
+}
+
+### 2. Повторное создание -> ОЖИДАЕТСЯ: 409 Conflict
+POST http://localhost:8080/api/projects
+Content-Type: application/json
+X-XSRF-TOKEN: {{csrfToken}}
+
+{
+  "title": "Kickstarter Project 4",
+  "description": "Создание кампании автором",
+  "goal": 300000.00,
+  "deadline": "2026-12-31T23:59:59Z",
+  "authorId": 1
+}
+
+
+### ДЛЯ СКРИНШОТА 3: Проверка долговечности
+
+### 3. Чтение списка проектов после рестарта приложения -> ОЖИДАЕТСЯ: 200 OK
+GET http://localhost:8080/api/projects?page=1&size=10

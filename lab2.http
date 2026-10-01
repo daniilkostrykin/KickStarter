@@ -1,6 +1,4 @@
-### ===================================================================
-### 1. АНОНИМНЫЙ ЗАПРОС (Проверка отсутствия сеанса)
-### ===================================================================
+### 1. АНОНИМНЫЙ ЗАПРОС
 
 ### 1.1 Запрос закрытого API без cookie (ожидается 302 на /login)
 // @no-redirect
@@ -14,9 +12,7 @@ Accept: application/json
 %}
 
 
-### ===================================================================
 ### 2. СЦЕНАРИЙ АВТОРА (CREATOR)
-### ===================================================================
 
 ### 2.1 Получить форму /login и извлечь CSRF-токен формы
 GET http://localhost:8080/login
@@ -37,7 +33,7 @@ username=creator&password=creator&_csrf={{loginCsrf}}
     client.test("Успешный вход автора (302)", function() {
         client.assert(response.status === 302, "Ожидался статус 302");
     });
-    // Сохраняем JSESSIONID, чтобы после logout проверить его аннулирование сервером (кейс 7)
+    // Сохранение JSESSIONID, чтобы после logout проверить его аннулирование сервером
     var sessionCookie = response.headers.valuesOf("Set-Cookie").find(function(c) {
         return c.indexOf("JSESSIONID=") === 0;
     });
@@ -114,7 +110,7 @@ X-XSRF-TOKEN: {{creatorApiCsrf}}
     });
 %}
 
-### 2.8 Кейс 7: запрос со СТАРОЙ сессионной cookie после выхода (ожидается 302 на /login)
+### 2.8 Запрос со СТАРОЙ сессионной cookie после выхода (ожидается 302 на /login)
 // @no-redirect
 GET http://localhost:8080/api/projects
 Accept: application/json
@@ -127,9 +123,8 @@ Cookie: JSESSIONID={{oldSessionId}}
 %}
 
 
-### ===================================================================
 ### 3. СЦЕНАРИЙ АДМИНИСТРАТОРА (ADMIN)
-### ===================================================================
+
 
 ### 3.1 Получить токен формы входа для admin
 GET http://localhost:8080/login
@@ -150,7 +145,7 @@ username=admin&password=admin&_csrf={{adminLoginCsrf}}
     client.test("Успешный вход администратора (302)", function() {
         client.assert(response.status === 302, "Ожидался статус 302");
     });
-    // Сохраняем JSESSIONID, чтобы после logout проверить его аннулирование сервером (кейс 7)
+    // Сохранение JSESSIONID, чтобы после logout проверить его аннулирование сервером
     var sessionCookie = response.headers.valuesOf("Set-Cookie").find(function(c) {
         return c.indexOf("JSESSIONID=") === 0;
     });
@@ -202,9 +197,7 @@ Cookie: JSESSIONID={{oldSessionId}}
 %}
 
 
-### ===================================================================
 ### 4. СЦЕНАРИЙ СПОНСОРА (BACKER)
-### ===================================================================
 
 ### 4.1 Получить токен формы входа для backer
 GET http://localhost:8080/login
