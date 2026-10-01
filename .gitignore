@@ -33,3 +33,22 @@ build/
 ### VS Code ###
 .vscode/
 *.py
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+**/application-local.*
+
+# IDE & Requests
+.idea/httpRequests/
+out/
+
+# Dumps, Logs & Temp
+*.log
+repomix-output.*
+repomix*
+t.txt
+*.tmp
+Thumbs.db
+.DS_Store

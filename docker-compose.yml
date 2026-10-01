@@ -6,8 +6,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -25,15 +25,15 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: kickstarter_db
-      POSTGRES_USER: kickstarter_user
-      POSTGRES_PASSWORD: kickstarter_password
+      POSTGRES_DB: ${POSTGRES_DB:-kickstarter_db}
+      POSTGRES_USER: ${POSTGRES_USER:-kickstarter_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kickstarter_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - kickstarter-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kickstarter_user -d kickstarter_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kickstarter_user} -d ${POSTGRES_DB:-kickstarter_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -43,9 +43,9 @@ services:
     image: quay.io/keycloak/keycloak:26.3.2
     command: [ "start-dev", "--import-realm", "--health-enabled=true" ]
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin-dev-only
-      KC_HOSTNAME: http://localhost:8085
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin-dev-only}
+      KC_HOSTNAME: ${KC_HOSTNAME:-http://localhost:8085}
     ports:
       - "127.0.0.1:8085:8080"
     volumes:

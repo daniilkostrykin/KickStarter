@@ -9,10 +9,10 @@ spring:
           audiences: audit-service
     # Подключение к локальному брокеру
   rabbitmq:
-    host: localhost
+    host: ${RABBITMQ_HOST:localhost}
     port: 5672
-    username: guest
-    password: guest
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
 
     #  Spring Boot передаёт trace-id из AMQP-заголовков в MDC логгера.
     # Это позволяет связать запрос в demo-rest с обработкой в audit-service.
